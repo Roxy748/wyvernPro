@@ -1,6 +1,6 @@
 -- // KEY CONFIGURATION //
-local correctKey = "lua2026"
-local keyLink = "https://link-center.net/5213310/A6wQfYBp5IF5"
+local correctKey = "Wyvren"
+local keyLink = "https://discord.gg/HHyvyWDy3a"
 
 -- // KEY SYSTEM INTERFACE //
 local ScreenGui = Instance.new("ScreenGui")
@@ -11,7 +11,7 @@ local VerifyBtn = Instance.new("TextButton")
 local GetKeyBtn = Instance.new("TextButton")
 
 ScreenGui.Parent = game:GetService("CoreGui")
-ScreenGui.Name = "KeySystemDinas"
+ScreenGui.Name = "KeySystemWyvren"
 
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
@@ -24,7 +24,7 @@ MainFrame.Draggable = true
 
 Title.Parent = MainFrame
 Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "DINAS PROJECT | KEY SYSTEM"
+Title.Text = " Wyvren | KEY SYSTEM"
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
@@ -115,7 +115,7 @@ local function StartScript()
 
     local function NewDrawing(Type, Properties)
         local Obj = Drawing.new(Type)
-        for k, v in pairs(Properties) do Obj[k] = v end
+        for k, v in pairs(Properties) do Obj[k] = v en
         return Obj
     end
 
@@ -283,7 +283,7 @@ local function StartScript()
     for _, Plr in ipairs(Players:GetPlayers()) do if Plr ~= LocalPlayer then CreateESP(Plr) end end
 
     local FOV_ScreenGui = Instance.new("ScreenGui")
-    FOV_ScreenGui.Name = "DINAS_FOV"
+    FOV_ScreenGui.Name = "Wyvren_FOV"
     FOV_ScreenGui.ResetOnSpawn = false
     FOV_ScreenGui.IgnoreGuiInset = true
     FOV_ScreenGui.DisplayOrder = 9999
@@ -369,8 +369,8 @@ local function StartScript()
         end
     end)
 
-    Library:Watermark("DINAS PROJECT | V 1.0")
-    local Window = Library:Window("DINAS PROJECT")
+    Library:Watermark("Wyvren Pro | V 1.0")
+    local Window = Library:Window("Wyvren Pro")
 
     Window:Section("Main")
 
