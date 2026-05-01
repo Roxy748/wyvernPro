@@ -1,93 +1,126 @@
--- [[ WYVERN PRO - XENO ULTIMATE REPAIR ]]
-print("Wyvern Pro: Baslatiliyor...")
+-- [[ WYVERN PRO - GITHUB SOURCE RECONSTRUCTION ]]
+-- Author: Roxy (Modified for Xeno)
 
-local success, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+local Success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 end)
 
-if not success or not Rayfield then
-    warn("HATA: Rayfield yuklenemedi! İnternet veya Executor sorunu.")
-    -- Eğer üstteki çalışmazsa alternatif linki dene
-    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+if not Success then
+    warn("Rayfield yuklenemedi! İnternet baglantinizi veya Executor yetkilerini kontrol edin.")
+    return
 end
 
-print("Wyvern Pro: UI Kütüphanesi Hazır.")
-
--- [[ AYARLAR ]]
-_G.SilentAim = false
-_G.FOV = 100
-_G.ESP_Enabled = false
-
--- [[ PENCERE OLUŞTURMA ]]
+-- [[ WINDOW CREATION ]]
 local Window = Rayfield:CreateWindow({
    Name = "Wyvern Pro",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "Xeno Fix Version",
-   ConfigurationSaving = { Enabled = false }
+   LoadingSubtitle = "Github: Efe5151/wyvernPro",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = false
 })
 
-print("Wyvern Pro: Pencere Olusturuldu.")
+-- [[ GLOBAL VARIABLES ]]
+_G.SilentAim = false
+_G.FOV = 150
+_G.ESP = false
+_G.Bhop = false
+_G.WalkSpeed = 16
 
--- SEKMELER
+-- [[ TABS ]]
 local CombatTab = Window:CreateTab("⚔️ Combat")
 local ESPTab = Window:CreateTab("👁️ ESP")
 local SkinTab = Window:CreateTab("👕 SkinChanger")
 
--- COMBAT İÇERİĞİ
+-- [[ COMBAT SECTION ]]
+CombatTab:CreateSection("Main Combat Controls | Edit By Roxy")
+
 CombatTab:CreateToggle({
    Name = "Silent Aim",
    CurrentValue = false,
-   Callback = function(Value) 
-       _G.SilentAim = Value 
-       print("Silent Aim: ", Value)
-   end,
+   Callback = function(Value) _G.SilentAim = Value end,
 })
 
 CombatTab:CreateSlider({
-   Name = "FOV",
-   Range = {0, 500},
+   Name = "FOV Radius",
+   Range = {0, 600},
    Increment = 10,
-   CurrentValue = 100,
+   CurrentValue = 150,
    Callback = function(Value) _G.FOV = Value end,
 })
 
--- ESP İÇERİĞİ
+-- [[ ESP SECTION ]]
+ESPTab:CreateSection("Visual Enhancements")
+
 ESPTab:CreateToggle({
-   Name = "Player Highlight (ESP)",
+   Name = "Highlight ESP",
    CurrentValue = false,
-   Callback = function(Value) _G.ESP_Enabled = Value end,
+   Callback = function(Value) _G.ESP = Value end,
 })
 
--- LOGIC (ÇALIŞTIRICI)
+-- [[ SKINCHANGER SECTION ]]
+SkinTab:CreateSection("Client-Side Changer")
+
+SkinTab:CreateInput({
+   Name = "Shirt ID",
+   PlaceholderText = "rbxassetid://",
+   Callback = function(Text)
+       local char = game.Players.LocalPlayer.Character
+       if char and char:FindFirstChildOfClass("Shirt") then
+           char:FindFirstChildOfClass("Shirt").ShirtTemplate = "rbxassetid://" .. Text
+       end
+   end,
+})
+
+-- [[ 🚀 INTERNAL LOGIC (FUNCTIONAL PART) ]]
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
 FOVCircle.Thickness = 1
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Color = Color3.fromRGB(255, 0, 0)
+FOVCircle.Filled = false
 
 game:GetService("RunService").RenderStepped:Connect(function()
-    if _G.SilentAim then
-        FOVCircle.Visible = true
-        FOVCircle.Radius = _G.FOV
-        FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
-    else
-        FOVCircle.Visible = false
-    end
+    -- FOV Update
+    FOVCircle.Visible = _G.SilentAim
+    FOVCircle.Radius = _G.FOV
+    FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
 
-    if _G.ESP_Enabled then
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character then
-                local h = v.Character:FindFirstChild("WyvernESP") or Instance.new("Highlight", v.Character)
-                h.Name = "WyvernESP"
+    -- ESP Logic
+    if _G.ESP then
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= game.Players.LocalPlayer and p.Character then
+                local h = p.Character:FindFirstChild("RoxyESP") or Instance.new("Highlight", p.Character)
+                h.Name = "RoxyESP"
                 h.FillColor = Color3.fromRGB(255, 0, 0)
+                h.OutlineTransparency = 0
             end
         end
     else
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v.Character and v.Character:FindFirstChild("WyvernESP") then
-                v.Character.WyvernESP:Destroy()
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("RoxyESP") then
+                p.Character.RoxyESP:Destroy()
             end
+        end
+    end
+
+    -- Silent Aim (Auto-Track)
+    if _G.SilentAim and game:GetService("UserInputService"):IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local target = nil
+        local dist = _G.FOV
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                local pos, onScreen = game.Workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local magnitude = (Vector2.new(pos.X, pos.Y) - game:GetService("UserInputService"):GetMouseLocation()).Magnitude
+                    if magnitude < dist then
+                        target = v.Character.HumanoidRootPart
+                        dist = magnitude
+                    end
+                end
+            end
+        end
+        if target then
+            game.Workspace.CurrentCamera.CFrame = CFrame.new(game.Workspace.CurrentCamera.CFrame.Position, target.Position)
         end
     end
 end)
 
-print("Wyvern Pro: Sistem Aktif!")
+Rayfield:Notify({Title = "Yüklendi!", Content = "Wyvern Pro: Edit By Roxy Aktif.", Duration = 4})
