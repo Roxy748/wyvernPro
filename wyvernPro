@@ -1,25 +1,46 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- [[ WYVERN PRO - XENO ULTIMATE REPAIR ]]
+print("Wyvern Pro: Baslatiliyor...")
+
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
+end)
+
+if not success or not Rayfield then
+    warn("HATA: Rayfield yuklenemedi! İnternet veya Executor sorunu.")
+    -- Eğer üstteki çalışmazsa alternatif linki dene
+    Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end
+
+print("Wyvern Pro: UI Kütüphanesi Hazır.")
 
 -- [[ AYARLAR ]]
 _G.SilentAim = false
 _G.FOV = 100
 _G.ESP_Enabled = false
-_G.ESP_Color = Color3.fromRGB(255, 0, 0)
 
--- [[ MENÜ OLUŞTURMA ]]
+-- [[ PENCERE OLUŞTURMA ]]
 local Window = Rayfield:CreateWindow({
    Name = "Wyvern Pro",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "Xeno Special Edition",
+   LoadingSubtitle = "Xeno Fix Version",
    ConfigurationSaving = { Enabled = false }
 })
 
--- 1. COMBAT
-local CombatTab = Window:CreateTab("⚔️ Combat", 4483362458)
+print("Wyvern Pro: Pencere Olusturuldu.")
+
+-- SEKMELER
+local CombatTab = Window:CreateTab("⚔️ Combat")
+local ESPTab = Window:CreateTab("👁️ ESP")
+local SkinTab = Window:CreateTab("👕 SkinChanger")
+
+-- COMBAT İÇERİĞİ
 CombatTab:CreateToggle({
    Name = "Silent Aim",
    CurrentValue = false,
-   Callback = function(Value) _G.SilentAim = Value end,
+   Callback = function(Value) 
+       _G.SilentAim = Value 
+       print("Silent Aim: ", Value)
+   end,
 })
 
 CombatTab:CreateSlider({
@@ -30,85 +51,43 @@ CombatTab:CreateSlider({
    Callback = function(Value) _G.FOV = Value end,
 })
 
--- 2. ESP
-local ESPTab = Window:CreateTab("👁️ ESP", 4483362458)
+-- ESP İÇERİĞİ
 ESPTab:CreateToggle({
    Name = "Player Highlight (ESP)",
    CurrentValue = false,
    Callback = function(Value) _G.ESP_Enabled = Value end,
 })
 
--- 3. SKINCHANGER
-local SkinTab = Window:CreateTab("👕 SkinChanger", 4483362458)
-SkinTab:CreateInput({
-   Name = "Shirt ID",
-   PlaceholderText = "ID Gir...",
-   Callback = function(Text)
-       local char = game.Players.LocalPlayer.Character
-       if char then
-           local s = char:FindFirstChildOfClass("Shirt") or Instance.new("Shirt", char)
-           s.ShirtTemplate = "rbxassetid://" .. Text
-       end
-   end,
-})
-
--- [[ 🚀 ÇALIŞTIRICI MOTOR (LOGIC) ]]
--- Bu kısım olmazsa butonlar sadece süstür, çalışmaz!
-
+-- LOGIC (ÇALIŞTIRICI)
 local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
 FOVCircle.Thickness = 1
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Filled = false
 
--- ESP & Aim Döngüsü
 game:GetService("RunService").RenderStepped:Connect(function()
-    -- FOV Halkası
-    FOVCircle.Visible = _G.SilentAim
-    FOVCircle.Radius = _G.FOV
-    FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
-
-    -- ESP Sistemi (Highlight Yöntemi - Xeno En Stabil Bu Çalışır)
-    for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= game.Players.LocalPlayer and v.Character then
-            local highlight = v.Character:FindFirstChild("WyvernESP")
-            if _G.ESP_Enabled then
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "WyvernESP"
-                    highlight.Parent = v.Character
-                end
-                highlight.FillColor = _G.ESP_Color
-                highlight.OutlineColor = Color3.fromRGB(255,255,255)
-            else
-                if highlight then highlight:Destroy() end
-            end
-        end
+    if _G.SilentAim then
+        FOVCircle.Visible = true
+        FOVCircle.Radius = _G.FOV
+        FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
+    else
+        FOVCircle.Visible = false
     end
 
-    -- Basit Silent Aim Mantığı (Kamerayı Odaklama)
-    if _G.SilentAim and game:GetService("UserInputService"):IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-        local target = nil
-        local maxDist = _G.FOV
-        
+    if _G.ESP_Enabled then
         for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Head") then
-                local pos, onScreen = game.Workspace.CurrentCamera:WorldToViewportPoint(v.Character.Head.Position)
-                if onScreen then
-                    local mousePos = game:GetService("UserInputService"):GetMouseLocation()
-                    local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                    if dist < maxDist then
-                        target = v.Character.Head
-                        maxDist = dist
-                    end
-                end
+            if v ~= game.Players.LocalPlayer and v.Character then
+                local h = v.Character:FindFirstChild("WyvernESP") or Instance.new("Highlight", v.Character)
+                h.Name = "WyvernESP"
+                h.FillColor = Color3.fromRGB(255, 0, 0)
             end
         end
-        
-        if target then
-            local cam = game.Workspace.CurrentCamera
-            cam.CFrame = CFrame.new(cam.CFrame.Position, target.Position)
+    else
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v.Character and v.Character:FindFirstChild("WyvernESP") then
+                v.Character.WyvernESP:Destroy()
+            end
         end
     end
 end)
 
-Rayfield:Notify({Title = "SİSTEM AKTİF", Content = "Edit By Roxy - Motorlar Çalıştırıldı!", Duration = 5})
+print("Wyvern Pro: Sistem Aktif!")
