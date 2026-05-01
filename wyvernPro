@@ -1,5 +1,5 @@
--- [[ WYVERN PRO - ROXY ULTIMATE FIX V5 ]]
--- ESP Geri Getirildi | Sağ Tık Yasaklandı | Auto Shoot Fix
+-- [[ WYVERN PRO - ROXY ULTIMATE V7 ]]
+-- ESP Geri Geldi | Görüş Odaklı Kilitlenme | Sağ Tık Bloklandı
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -7,13 +7,12 @@ _G.SilentAim = false
 _G.AimKey = Enum.KeyCode.E
 _G.FOV = 150
 _G.ESP_Enabled = false
-_G.WallCheck = true
 _G.AutoShoot = false
 
 local Window = Rayfield:CreateWindow({
    Name = "Wyvern Pro",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "V5 Final Stable",
+   LoadingSubtitle = "V7 Visibility Update",
    ConfigurationSaving = { Enabled = false }
 })
 
@@ -30,14 +29,9 @@ CombatTab:CreateKeybind({
    Callback = function(Key) _G.AimKey = Key end,
 })
 CombatTab:CreateToggle({
-   Name = "Otomatik Ateş (Auto Shoot)",
+   Name = "Otomatik Ateş",
    CurrentValue = false,
    Callback = function(v) _G.AutoShoot = v end,
-})
-CombatTab:CreateToggle({
-   Name = "Duvar Kontrolü (Wall Check)",
-   CurrentValue = true,
-   Callback = function(v) _G.WallCheck = v end,
 })
 CombatTab:CreateSlider({
    Name = "FOV",
@@ -56,37 +50,42 @@ ESPTab:CreateToggle({
 })
 
 -- [[ 🚀 SİSTEM MOTORU ]]
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1.5
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Color = Color3.fromRGB(0, 255, 0) -- Yeşil FOV
 
-local vim = game:GetService("VirtualInputManager")
-local UIS = game:GetService("UserInputService")
-
+-- Gelişmiş Görüş Kontrolü (Adamı görünce kilitlenir)
 local function IsVisible(target)
-    if not _G.WallCheck then return true end
     local cam = workspace.CurrentCamera
     local char = game.Players.LocalPlayer.Character
+    if not char or not target then return false end
+    
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {char, cam}
     
-    local result = workspace:Raycast(cam.CFrame.Position, (target.Position - cam.CFrame.Position).Unit * 600, params)
+    local result = workspace:Raycast(cam.CFrame.Position, (target.Position - cam.CFrame.Position).Unit * 1000, params)
+    
+    -- Eğer önünde bir engel yoksa veya çarptığı şey hedefin kendisiyse görünürdür.
     return result == nil or result.Instance:IsDescendantOf(target.Parent)
 end
 
-game:GetService("RunService").RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     FOVCircle.Visible = _G.SilentAim
     FOVCircle.Radius = _G.FOV
     FOVCircle.Position = UIS:GetMouseLocation()
 
-    -- ESP SİSTEMİ (Geri Geldi)
+    -- 🔴 ESP SİSTEMİ (YENİDEN EKLENDİ)
     if _G.ESP_Enabled then
         for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character then
+            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local h = v.Character:FindFirstChild("RoxyHighlight") or Instance.new("Highlight", v.Character)
                 h.Name = "RoxyHighlight"
-                h.FillColor = Color3.fromRGB(255, 0, 0)
+                h.FillColor = Color3.fromRGB(255, 0, 0) -- Kırmızı ESP
+                h.OutlineColor = Color3.fromRGB(255, 255, 255)
+                h.Enabled = true
             end
         end
     else
@@ -97,21 +96,25 @@ game:GetService("RunService").RenderStepped:Connect(function()
         end
     end
 
-    -- KİLİTLENME VE ATEŞ ETME (Sağ Tık Engelleyici Eklendi)
-    local RightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    -- 🎯 KİLİTLENME (SADECE TUŞ VE GÖRÜŞ ODAKLI)
+    local isRightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
     
-    if _G.SilentAim and UIS:IsKeyDown(_G.AimKey) and not RightClick then
+    if _G.SilentAim and UIS:IsKeyDown(_G.AimKey) and not isRightClick then
         local target = nil
         local dist = _G.FOV
         
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                
                 if vis then
                     local m = (Vector2.new(p.X, p.Y) - UIS:GetMouseLocation()).Magnitude
-                    if m < dist and IsVisible(v.Character.HumanoidRootPart) then
-                        target = v.Character.HumanoidRootPart
-                        dist = m
+                    if m < dist then
+                        -- Sadece Görünürse Kilitle!
+                        if IsVisible(v.Character.HumanoidRootPart) then
+                            target = v.Character.HumanoidRootPart
+                            dist = m
+                        end
                     end
                 end
             end
@@ -120,13 +123,14 @@ game:GetService("RunService").RenderStepped:Connect(function()
         if target then
             workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
             
+            -- Auto Shoot (Virtual Input Manager)
             if _G.AutoShoot then
-                vim:SendMouseButtonEvent(UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y, 0, true, game, 0)
+                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game,0)
                 task.wait()
-                vim:SendMouseButtonEvent(UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y, 0, false, game, 0)
+                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game,0)
             end
         end
     end
 end)
 
-Rayfield:Notify({Title = "Wyvern Pro V5", Content = "ESP Geri Geldi! Sağ Tık Yasaklandı.", Duration = 5})
+Rayfield:Notify({Title = "Wyvern Pro V7", Content = "ESP ve Görüş Kontrolü Aktif!", Duration = 5})
