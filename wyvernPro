@@ -1,109 +1,131 @@
--- [[ WYVERN PRO - XENO & GLOBAL BYPASS ]]
--- Amaç: Adonis 267 Hatasını aşmak ve her özelliği gizli (bypass) çalıştırmak.
+-- [[ WYVERN PRO - MASTER BYPASS & UI ]]
+-- Bypass katmanı en başta çalışır, 267 hatasını engeller.
 
 local Success, Error = pcall(function()
-    -- 🛡️ [PHASE 1: UNIVERSAL BYPASS]
+    -- 🛡️ [CORE BYPASS]
     local lp = game:GetService("Players").LocalPlayer
-    
-    -- Kick fonksiyonunu etkisizleştir (Xeno Uyumluluk Modu)
     if lp then
-        local oldKick
-        oldKick = hookfunction(lp.Kick, function(self, reason)
-            warn("Wyvern: Kick engellendi! Sebep: " .. tostring(reason))
-            return nil
-        end)
+        hookfunction(lp.Kick, function() return nil end)
     end
 
-    -- Namecall Bypass (Adonis & AC sinyallerini susturur)
     local mt = getrawmetatable(game)
     local oldNC = mt.__namecall
     setreadonly(mt, false)
-
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
         if not checkcaller() and (method == "FireServer" or method == "InvokeServer") then
-            local rName = tostring(self)
-            if rName:find("Adonis") or rName:find("Check") or rName:find("\0") or rName:find("Control") or rName:find("Log") then
-                return nil -- Sinyali sunucuya gönderme, Adonis'i kör et.
-            end
+            if tostring(self):find("Adonis") or tostring(self):find("Check") then return nil end
         end
         return oldNC(self, ...)
     end)
     setreadonly(mt, true)
 end)
 
-if not Success then warn("Bypass Hatası: " .. tostring(Error)) end
+-- 🎨 [UI LIBRARY LOAD]
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- ⚙️ [PHASE 2: ELITE CONFIG]
-local Wyvern = {
-    Combat = {
-        SilentAim = true,
-        FOV = 180,
-        AimKey = Enum.KeyCode.E,
-        TargetPart = "Head"
-    },
-    Visuals = {
-        ESP = true,
-        Boxes = true,
-        Names = true,
-        TeamCheck = true,
-        FOVCircle = true
-    },
-    Movement = {
-        WalkSpeed = 35, -- Anti-Ban sınırında hız
-        JumpPower = 60,
-        Bhop = true,
-        InfJump = false
-    },
-    MenuKey = Enum.KeyCode.RightShift
-}
+local Window = Rayfield:CreateWindow({
+   Name = "WYVERN PRO | v10.0",
+   LoadingTitle = "Wyvern System Loading...",
+   LoadingSubtitle = "by Pavlov & Gemini",
+   ConfigurationSaving = { Enabled = true, Folder = "WyvernPro" }
+})
 
--- 🎯 [PHASE 3: TARGETING ENGINE]
+-- ⚙️ [GLOBAL SETTINGS]
+_G.AimbotEnabled = false
+_G.SilentAim = false
+_G.AimKey = "E"
+_G.FOV = 150
+_G.WalkSpeed = 16
+_G.Bhop = false
+
+-- 🎯 [COMBAT TAB]
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local Section = CombatTab:CreateSection("Aimbot & Silent Aim")
+
+CombatTab:CreateToggle({
+   Name = "Aimbot Enabled",
+   CurrentValue = false,
+   Callback = function(Value) _G.AimbotEnabled = Value end,
+})
+
+CombatTab:CreateKeybind({
+   Name = "Aimbot Keybind",
+   CurrentKey = "E",
+   HoldToInteract = true,
+   Callback = function(Keybind) _G.AimKey = Keybind end,
+})
+
+CombatTab:CreateSlider({
+   Name = "FOV Radius",
+   Range = {0, 800},
+   Increment = 10,
+   CurrentValue = 150,
+   Callback = function(Value) _G.FOV = Value end,
+})
+
+-- 🏃 [MOVEMENT TAB]
+local MoveTab = Window:CreateTab("Movement", 4483362458)
+
+MoveTab:CreateSlider({
+   Name = "WalkSpeed Bypass",
+   Range = {16, 200},
+   Increment = 1,
+   CurrentValue = 16,
+   Callback = function(Value) _G.WalkSpeed = Value end,
+})
+
+MoveTab:CreateToggle({
+   Name = "Bhop (BunnyHop)",
+   CurrentValue = false,
+   Callback = function(Value) _G.Bhop = Value end,
+})
+
+-- 🎯 [TARGETING LOGIC]
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Color = Color3.fromRGB(0, 255, 255)
 FOVCircle.Thickness = 1
-FOVCircle.Filled = false
+FOVCircle.Color = Color3.fromRGB(0, 255, 255)
 
 local function GetTarget()
-    local Target, MaxDist = nil, Wyvern.Combat.FOV
+    local Target, MaxDist = nil, _G.FOV
     for _, v in pairs(game.Players:GetPlayers()) do
-        if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild(Wyvern.Combat.TargetPart) then
-            if not (Wyvern.Visuals.TeamCheck and v.Team == game.Players.LocalPlayer.Team) then
-                local pos, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character[Wyvern.Combat.TargetPart].Position)
-                if vis then
-                    local mag = (Vector2.new(pos.X, pos.Y) - game:GetService("UserInputService"):GetMouseLocation()).Magnitude
-                    if mag < MaxDist then 
-                        MaxDist = mag 
-                        Target = v.Character[Wyvern.Combat.TargetPart] 
-                    end
-                end
+        if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("Head") then
+            local pos, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.Head.Position)
+            if vis then
+                local mag = (Vector2.new(pos.X, pos.Y) - game:GetService("UserInputService"):GetMouseLocation()).Magnitude
+                if mag < MaxDist then MaxDist = mag Target = v.Character.Head end
             end
         end
     end
     return Target
 end
 
--- 🔄 [PHASE 4: MAIN LOOP - BYPASSED FEATURES]
+-- 🔄 [MAIN LOOP]
 game:GetService("RunService").RenderStepped:Connect(function()
-    -- FOV Visual
-    FOVCircle.Visible = Wyvern.Visuals.FOVCircle
-    FOVCircle.Radius = Wyvern.Combat.FOV
+    FOVCircle.Visible = true
+    FOVCircle.Radius = _G.FOV
     FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
 
-    local Char = game.Players.LocalPlayer.Character
-    local Hum = Char and Char:FindFirstChild("Humanoid")
-    local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
-    
-    if Hum and HRP then
-        -- 🚀 Speed Bypass (CFrame Injection)
-        if Wyvern.Movement.WalkSpeed > 16 then
-            HRP.CFrame = HRP.CFrame + (Hum.MoveDirection * (Wyvern.Movement.WalkSpeed / 100))
+    local lp = game.Players.LocalPlayer
+    local Char = lp.Character
+    if Char and Char:FindFirstChild("HumanoidRootPart") then
+        -- Speed Bypass
+        if _G.WalkSpeed > 16 then
+            Char.HumanoidRootPart.CFrame = Char.HumanoidRootPart.CFrame + (Char.Humanoid.MoveDirection * (_G.WalkSpeed / 120))
         end
-        -- 🐰 Bhop
-        if Wyvern.Movement.Bhop and game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) and Hum.FloorMaterial ~= Enum.Material.Air then
-            Hum.Jump = true
+        -- Bhop
+        if _G.Bhop and game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) and Char.Humanoid.FloorMaterial ~= Enum.Material.Air then
+            Char.Humanoid.Jump = true
+        end
+    end
+
+    -- Aimbot Execution
+    if _G.AimbotEnabled and game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode[_G.AimKey]) then
+        local Target = GetTarget()
+        if Target then
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, Target.Position)
         end
     end
 end)
 
-print("WYVERN XENO-ALPHA LOADED | BYPASS: SUPREME")
+Rayfield:Notify({ Title = "Wyvern Loaded", Content = "Right Shift to toggle menu!", Duration = 5 })
