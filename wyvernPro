@@ -1,136 +1,162 @@
--- [[ WYVERN PRO - ROXY ULTIMATE V7 ]]
--- ESP Geri Geldi | Görüş Odaklı Kilitlenme | Sağ Tık Bloklandı
+-- [[ WYVERN PRO - MULTI-LANGUAGE EDITION ]]
+-- Edit By Roxy | Turkish & English Support | Anti-RightClick
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- Varsayılan Ayarlar
 _G.SilentAim = false
 _G.AimKey = Enum.KeyCode.E
 _G.FOV = 150
-_G.ESP_Enabled = false
+_G.ESP = false
 _G.AutoShoot = false
+_G.Language = "TR" -- Varsayılan dil
 
+-- Dil Sözlüğü
+local lang = {
+    TR = {
+        Title = "Wyvern Pro | Roxy",
+        Combat = "⚔️ Savaş",
+        Visuals = "👁️ Görsel",
+        SA_Active = "Silent Aim Aktif",
+        Keybind = "Kilitleme Tuşu",
+        AutoShoot = "Otomatik Ateş",
+        FOV_Slider = "Görüş Alanı (FOV)",
+        ESP_Toggle = "Oyuncu ESP",
+        Notify_Title = "Başarılı",
+        Notify_Msg = "Wyvern Pro Yüklendi!",
+        Lang_Select = "Dil Seçiniz / Select Language"
+    },
+    EN = {
+        Title = "Wyvern Pro | Roxy",
+        Combat = "⚔️ Combat",
+        Visuals = "👁️ Visuals",
+        SA_Active = "Silent Aim Active",
+        Keybind = "Aim Keybind",
+        AutoShoot = "Auto Shoot",
+        FOV_Slider = "Field of View (FOV)",
+        ESP_Toggle = "Player ESP",
+        Notify_Title = "Success",
+        Notify_Msg = "Wyvern Pro Loaded!",
+        Lang_Select = "Select Language"
+    }
+}
+
+-- Dil Seçim Penceresi
 local Window = Rayfield:CreateWindow({
-   Name = "Wyvern Pro",
+   Name = "Wyvern Pro - Language Selection",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "V7 Visibility Update",
+   LoadingSubtitle = "Youtube: Pavlov",
    ConfigurationSaving = { Enabled = false }
 })
 
--- [[ ⚔️ COMBAT ]]
-local CombatTab = Window:CreateTab("⚔️ Combat")
-CombatTab:CreateToggle({
-   Name = "Silent Aim Aktif",
-   CurrentValue = false,
-   Callback = function(v) _G.SilentAim = v end,
+local LangTab = Window:CreateTab("🌍 Language")
+LangTab:CreateButton({
+   Name = "Türkçe",
+   Callback = function()
+      _G.Language = "TR"
+      Rayfield:Destroy()
+      InitHax()
+   end,
 })
-CombatTab:CreateKeybind({
-   Name = "Kilitleme Tuşu",
-   CurrentKeybind = "E",
-   Callback = function(Key) _G.AimKey = Key end,
-})
-CombatTab:CreateToggle({
-   Name = "Otomatik Ateş",
-   CurrentValue = false,
-   Callback = function(v) _G.AutoShoot = v end,
-})
-CombatTab:CreateSlider({
-   Name = "FOV",
-   Range = {0, 600},
-   Increment = 10,
-   CurrentValue = 150,
-   Callback = function(v) _G.FOV = v end,
+LangTab:CreateButton({
+   Name = "English",
+   Callback = function()
+      _G.Language = "EN"
+      Rayfield:Destroy()
+      InitHax()
+   end,
 })
 
--- [[ 👁️ ESP ]]
-local ESPTab = Window:CreateTab("👁️ ESP")
-ESPTab:CreateToggle({
-   Name = "Oyuncu ESP (Highlight)",
-   CurrentValue = false,
-   Callback = function(v) _G.ESP_Enabled = v end,
-})
+-- Ana Hile Fonksiyonu
+function InitHax()
+    local L = lang[_G.Language]
+    local MainWin = Rayfield:CreateWindow({
+       Name = L.Title,
+       LoadingTitle = "Roxy Hub",
+       LoadingSubtitle = "Multi-Lang Edition",
+       ConfigurationSaving = { Enabled = false }
+    })
 
--- [[ 🚀 SİSTEM MOTORU ]]
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 1.5
-FOVCircle.Color = Color3.fromRGB(0, 255, 0) -- Yeşil FOV
+    -- ⚔️ COMBAT
+    local CombatTab = MainWin:CreateTab(L.Combat)
+    CombatTab:CreateToggle({
+       Name = L.SA_Active,
+       CurrentValue = false,
+       Callback = function(v) _G.SilentAim = v end,
+    })
+    CombatTab:CreateKeybind({
+       Name = L.Keybind,
+       CurrentKeybind = "E",
+       Callback = function(Key) _G.AimKey = Key end,
+    })
+    CombatTab:CreateToggle({
+       Name = L.AutoShoot,
+       CurrentValue = false,
+       Callback = function(v) _G.AutoShoot = v end,
+    })
+    CombatTab:CreateSlider({
+       Name = L.FOV_Slider,
+       Range = {0, 600},
+       Increment = 10,
+       CurrentValue = 150,
+       Callback = function(v) _G.FOV = v end,
+    })
 
--- Gelişmiş Görüş Kontrolü (Adamı görünce kilitlenir)
-local function IsVisible(target)
-    local cam = workspace.CurrentCamera
-    local char = game.Players.LocalPlayer.Character
-    if not char or not target then return false end
-    
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = {char, cam}
-    
-    local result = workspace:Raycast(cam.CFrame.Position, (target.Position - cam.CFrame.Position).Unit * 1000, params)
-    
-    -- Eğer önünde bir engel yoksa veya çarptığı şey hedefin kendisiyse görünürdür.
-    return result == nil or result.Instance:IsDescendantOf(target.Parent)
-end
+    -- 👁️ VISUALS
+    local VisualTab = MainWin:CreateTab(L.Visuals)
+    VisualTab:CreateToggle({
+       Name = L.ESP_Toggle,
+       CurrentValue = false,
+       Callback = function(v) _G.ESP = v end,
+    })
 
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Visible = _G.SilentAim
-    FOVCircle.Radius = _G.FOV
-    FOVCircle.Position = UIS:GetMouseLocation()
+    -- MOTOR SİSTEMİ
+    local UIS = game:GetService("UserInputService")
+    local FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 1.5
+    FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 
-    -- 🔴 ESP SİSTEMİ (YENİDEN EKLENDİ)
-    if _G.ESP_Enabled then
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local h = v.Character:FindFirstChild("RoxyHighlight") or Instance.new("Highlight", v.Character)
-                h.Name = "RoxyHighlight"
-                h.FillColor = Color3.fromRGB(255, 0, 0) -- Kırmızı ESP
-                h.OutlineColor = Color3.fromRGB(255, 255, 255)
-                h.Enabled = true
+    game:GetService("RunService").RenderStepped:Connect(function()
+        FOVCircle.Visible = _G.SilentAim
+        FOVCircle.Radius = _G.FOV
+        FOVCircle.Position = UIS:GetMouseLocation()
+
+        if _G.ESP then
+            for _, v in pairs(game.Players:GetPlayers()) do
+                if v ~= game.Players.LocalPlayer and v.Character then
+                    local h = v.Character:FindFirstChild("RoxyESP") or Instance.new("Highlight", v.Character)
+                    h.Name = "RoxyESP"
+                    h.FillColor = Color3.fromRGB(255, 0, 0)
+                end
             end
         end
-    else
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v.Character and v.Character:FindFirstChild("RoxyHighlight") then
-                v.Character.RoxyHighlight:Destroy()
-            end
-        end
-    end
 
-    -- 🎯 KİLİTLENME (SADECE TUŞ VE GÖRÜŞ ODAKLI)
-    local isRightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-    
-    if _G.SilentAim and UIS:IsKeyDown(_G.AimKey) and not isRightClick then
-        local target = nil
-        local dist = _G.FOV
-        
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                
-                if vis then
-                    local m = (Vector2.new(p.X, p.Y) - UIS:GetMouseLocation()).Magnitude
-                    if m < dist then
-                        -- Sadece Görünürse Kilitle!
-                        if IsVisible(v.Character.HumanoidRootPart) then
+        -- SAĞ TIK KONTROLÜ (MouseButton2 basılıysa kilitlenmez!)
+        local RightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+        if _G.SilentAim and UIS:IsKeyDown(_G.AimKey) and not RightClick then
+            local target = nil
+            local dist = _G.FOV
+            for _, v in pairs(game.Players:GetPlayers()) do
+                if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                    if vis then
+                        local m = (Vector2.new(p.X, p.Y) - UIS:GetMouseLocation()).Magnitude
+                        if m < dist then
                             target = v.Character.HumanoidRootPart
                             dist = m
                         end
                     end
                 end
             end
-        end
-        
-        if target then
-            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
-            
-            -- Auto Shoot (Virtual Input Manager)
-            if _G.AutoShoot then
-                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game,0)
-                task.wait()
-                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game,0)
+            if target then
+                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
+                if _G.AutoShoot then
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game,0)
+                    task.wait()
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game,0)
+                end
             end
         end
-    end
-end)
-
-Rayfield:Notify({Title = "Wyvern Pro V7", Content = "ESP ve Görüş Kontrolü Aktif!", Duration = 5})
+    end)
+    Rayfield:Notify({Title = L.Notify_Title, Content = L.Notify_Msg, Duration = 5})
+end
