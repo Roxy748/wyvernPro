@@ -1,83 +1,68 @@
--- [[ WYVERN PRO - UPDATED SOURCE ]]
--- Edit By Roxy | Wall Check + Dynamic Keybind
+-- [[ WYVERN PRO - KEY ONLY UPDATE ]]
+-- Edit By Roxy | Sağ Tık Tamamen Kaldırıldı
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- [[ AYARLAR ]]
 _G.SilentAim = false
-_G.AimKey = Enum.KeyCode.E -- Başlangıç tuşu
+_G.AimKey = Enum.KeyCode.E -- Başlangıç tuşu E, menüden değiştirebilirsin
 _G.FOV = 150
 _G.ESP = false
-_G.WallCheck = true -- Duvar arkası kontrolü aktif
+_G.WallCheck = true
 
 local Window = Rayfield:CreateWindow({
    Name = "Wyvern Pro",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "Xeno Special Edition",
+   LoadingSubtitle = "No Mouse Lock Edition",
    ConfigurationSaving = { Enabled = false }
 })
 
--- ⚔️ COMBAT SEKİMESİ
 local CombatTab = Window:CreateTab("⚔️ Combat")
-
-CombatTab:CreateSection("Silent Aim Ayarları")
 
 CombatTab:CreateToggle({
    Name = "Silent Aim Aktif",
    CurrentValue = false,
-   Callback = function(Value) _G.SilentAim = Value end,
+   Callback = function(v) _G.SilentAim = v end,
 })
 
--- ⌨️ İSTEDİĞİN TUŞA ATAMA BÖLÜMÜ
 CombatTab:CreateKeybind({
-   Name = "Kilitleme Tuşu (Lock Key)",
+   Name = "Kilitleme Tuşu (Menüden Değiştir)",
    CurrentKeybind = "E",
    HoldToInteract = false,
-   Flag = "AimKeybind",
-   Callback = function(Keybind)
-       _G.AimKey = Keybind
-       Rayfield:Notify({Title = "Tuş Atandı", Content = "Yeni tuş: " .. tostring(Keybind), Duration = 2})
+   Callback = function(Key) 
+       _G.AimKey = Key 
+       Rayfield:Notify({Title = "Sistem", Content = "Tuş atandı: "..tostring(Key), Duration = 2})
    end,
 })
 
 CombatTab:CreateToggle({
-   Name = "Duvar Kontrolü (Wall Check)",
+   Name = "Duvar Kontrolü",
    CurrentValue = true,
-   Callback = function(Value) _G.WallCheck = Value end,
+   Callback = function(v) _G.WallCheck = v end,
 })
 
 CombatTab:CreateSlider({
-   Name = "Görüş Alanı (FOV)",
+   Name = "FOV",
    Range = {0, 600},
    Increment = 10,
    CurrentValue = 150,
    Callback = function(v) _G.FOV = v end,
 })
 
--- 👁️ ESP SEKİMESİ
-local ESPTab = Window:CreateTab("👁️ ESP")
-ESPTab:CreateToggle({
-   Name = "Player ESP",
-   CurrentValue = false,
-   Callback = function(v) _G.ESP = v end,
-})
-
--- [[ 🚀 SİSTEM MOTORU ]]
+-- LOGIC (ARKA PLAN MOTORU)
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
 FOVCircle.Thickness = 1.5
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 
--- Duvar Kontrolü Fonksiyonu
-local function IsVisible(targetPart)
+local function IsVisible(target)
     if not _G.WallCheck then return true end
     local char = game.Players.LocalPlayer.Character
-    if not char then return false end
-    
-    local ray = Ray.new(workspace.CurrentCamera.CFrame.Position, (targetPart.Position - workspace.CurrentCamera.CFrame.Position).Unit * 500)
-    local hit, pos = workspace:FindPartOnRayWithIgnoreList(ray, {char, targetPart.Parent})
-    
-    return hit == nil
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {char, target.Parent}
+    local origin = workspace.CurrentCamera.CFrame.Position
+    local direction = (target.Position - origin).Unit * (target.Position - origin).Magnitude
+    local result = workspace:Raycast(origin, direction, params)
+    return result == nil
 end
 
 game:GetService("RunService").RenderStepped:Connect(function()
@@ -85,43 +70,26 @@ game:GetService("RunService").RenderStepped:Connect(function()
     FOVCircle.Radius = _G.FOV
     FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
 
-    -- ESP Sistemi
-    if _G.ESP then
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character then
-                local h = v.Character:FindFirstChild("RoxyESP") or Instance.new("Highlight", v.Character)
-                h.Name = "RoxyESP"
-                h.FillColor = Color3.fromRGB(255, 0, 0)
-            end
-        end
-    end
-
-    -- Dinamik Tuş Atamalı Silent Aim
+    -- SADECE KLAVYE TUŞU KONTROLÜ (Mouse kontrolü silindi)
     if _G.SilentAim and game:GetService("UserInputService"):IsKeyDown(_G.AimKey) then
         local target = nil
         local dist = _G.FOV
-        
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                
                 if vis then
                     local m = (Vector2.new(p.X, p.Y) - game:GetService("UserInputService"):GetMouseLocation()).Magnitude
-                    if m < dist then
-                        -- Duvar kontrolünü burada yapıyoruz
-                        if IsVisible(v.Character.HumanoidRootPart) then
-                            target = v.Character.HumanoidRootPart
-                            dist = m
-                        end
+                    if m < dist and IsVisible(v.Character.HumanoidRootPart) then
+                        target = v.Character.HumanoidRootPart
+                        dist = m
                     end
                 end
             end
         end
-        
         if target then
             workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
         end
     end
 end)
 
-Rayfield:Notify({Title = "Wyvern Pro Güncellendi", Content = "Edit By Roxy - İyi Çekimler!", Duration = 5})
+Rayfield:Notify({Title = "Wyvern Pro Aktif", Content = "Sağ tık bağımlılığı kaldırıldı!", Duration = 5})
