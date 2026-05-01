@@ -1,0 +1,146 @@
+--[[
+    WYVERN ULTIMATE - PAVLOV EXCLUSIVE
+    Link: https://raw.githubusercontent.com/Efe5151/wyvernUltimate/
+    Özellikler: Silent Aim (Vector redirection), ESP, Speed Bypass, Anti-Kick
+]]
+
+-- --- 🛡️ ULTRA BYPASS KATMANI ---
+local rawget, rawset = rawget, rawset
+local setreadonly = setreadonly or make_writeable
+local getrawmetatable = getrawmetatable or debug.getmetatable
+
+-- Anti-Kick ve Koruma
+if not _G.WyvernProtected then
+    local oldKick; oldKick = hookfunction(game.Players.LocalPlayer.Kick, function(self, reason)
+        warn("HATA ENGELLENDI (Kick): " .. tostring(reason))
+        return nil -- Atılmayı engeller
+    end)
+    _G.WyvernProtected = true
+end
+
+-- --- ⚙️ DEĞİŞKENLER ---
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Camera = workspace.CurrentCamera
+
+local WyvernConfig = {
+    SilentAim = false,
+    AimKey = Enum.KeyCode.E,
+    TeamCheck = true,
+    ESP = false,
+    Speed = 26,
+    Jump = 55,
+    Bhop = false
+}
+
+-- --- 🎨 GÖRSEL MENÜ (NEON TEMA) ---
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Name = "WyvernMenu"
+Main.Size = UDim2.new(0, 250, 0, 400)
+Main.Position = UDim2.new(0.5, -125, 0.4, -200)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Instance.new("UICorner", Main)
+local Glow = Instance.new("UIStroke", Main)
+Glow.Color = Color3.fromRGB(0, 255, 255)
+Glow.Thickness = 2
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Text = "WYVERN ULTIMATE"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Title.Font = Enum.Font.GothamBold
+
+local List = Instance.new("UIListLayout", Main)
+List.Padding = UDim.new(0, 10)
+List.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Toggle Tuşu (Right Shift)
+UserInputService.InputBegan:Connect(function(i, g)
+    if not g and i.KeyCode == Enum.KeyCode.RightShift then Main.Visible = not Main.Visible end
+end)
+
+-- --- 🛠️ FONKSİYONLAR ---
+local function CreateBtn(name, configPath)
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(0, 220, 0, 40)
+    b.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    b.Text = name .. ": KAPALI"
+    b.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", b)
+
+    b.MouseButton1Click:Connect(function()
+        WyvernConfig[configPath] = not WyvernConfig[configPath]
+        b.Text = name .. (WyvernConfig[configPath] and ": AÇIK" or ": KAPALI")
+        b.TextColor3 = WyvernConfig[configPath] and Color3.fromRGB(0, 255, 150) or Color3.new(1,1,1)
+    end)
+end
+
+-- Boşluk ve Butonlar
+Instance.new("Frame", Main).Size = UDim2.new(0,1,0,45); Instance.new("Frame", Main).BackgroundTransparency = 1
+CreateBtn("Silent Aim (Key: E)", "SilentAim")
+CreateBtn("ESP (Box + Highlight)", "ESP")
+CreateBtn("Bunny Hop", "Bhop")
+CreateBtn("Bypass Speed", "SpeedMod")
+
+-- --- 🎯 SILENT AIM VE ESP MANTIĞI ---
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+    
+    if not checkcaller() and method == "FindPartOnRayWithIgnoreList" and WyvernConfig.SilentAim then
+        local target = nil
+        local dist = 1000
+        for _, v in pairs(Players:GetPlayers()) do
+            if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("Head") then
+                if not (WyvernConfig.TeamCheck and v.Team == LocalPlayer.Team) then
+                    local p, vis = Camera:WorldToViewportPoint(v.Character.Head.Position)
+                    if vis then
+                        local mag = (Vector2.new(p.X, p.Y) - UserInputService:GetMouseLocation()).Magnitude
+                        if mag < dist then dist = mag target = v.Character.Head end
+                    end
+                end
+            end
+        end
+        if target then
+            args[1] = Ray.new(Camera.CFrame.Position, (target.Position - Camera.CFrame.Position).Unit * 1000)
+            return oldNamecall(self, unpack(args))
+        end
+    end
+    return oldNamecall(self, ...)
+end)
+
+-- --- 🔄 ANA DÖNGÜ ---
+RunService.RenderStepped:Connect(function()
+    if WyvernConfig.ESP then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local hl = p.Character:FindFirstChild("WyvernESP")
+                if not (WyvernConfig.TeamCheck and p.Team == LocalPlayer.Team) then
+                    if not hl then
+                        local n = Instance.new("Highlight", p.Character)
+                        n.Name = "WyvernESP"
+                        n.FillColor = Color3.fromRGB(255, 0, 50)
+                    end
+                elseif hl then hl:Destroy() end
+            end
+        end
+    end
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        if WyvernConfig.SpeedMod then LocalPlayer.Character.Humanoid.WalkSpeed = WyvernConfig.Speed end
+        if WyvernConfig.Bhop and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+            LocalPlayer.Character.Humanoid.Jump = true
+        end
+    end
+end)
+
+print("Wyvern Ultimate Pro Yüklendi! Kapatmak/Açmak için Sağ Shift kullanın.")
