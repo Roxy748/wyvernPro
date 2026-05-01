@@ -1,48 +1,44 @@
--- [[ WYVERN PRO - ROXY ULTIMATE FIX ]]
--- Edit By Roxy | Sağ Tık Bloklandı | Duvar Kontrolü V3
+-- [[ WYVERN PRO - ROXY ULTIMATE FIX V5 ]]
+-- ESP Geri Getirildi | Sağ Tık Yasaklandı | Auto Shoot Fix
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
--- Ayarlar
 _G.SilentAim = false
 _G.AimKey = Enum.KeyCode.E
 _G.FOV = 150
+_G.ESP_Enabled = false
 _G.WallCheck = true
 _G.AutoShoot = false
 
 local Window = Rayfield:CreateWindow({
    Name = "Wyvern Pro",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "Anti-RightClick & WallFix",
+   LoadingSubtitle = "V5 Final Stable",
    ConfigurationSaving = { Enabled = false }
 })
 
+-- [[ ⚔️ COMBAT ]]
 local CombatTab = Window:CreateTab("⚔️ Combat")
-
 CombatTab:CreateToggle({
    Name = "Silent Aim Aktif",
    CurrentValue = false,
    Callback = function(v) _G.SilentAim = v end,
 })
-
 CombatTab:CreateKeybind({
    Name = "Kilitleme Tuşu",
    CurrentKeybind = "E",
    Callback = function(Key) _G.AimKey = Key end,
 })
-
 CombatTab:CreateToggle({
    Name = "Otomatik Ateş (Auto Shoot)",
    CurrentValue = false,
    Callback = function(v) _G.AutoShoot = v end,
 })
-
 CombatTab:CreateToggle({
    Name = "Duvar Kontrolü (Wall Check)",
    CurrentValue = true,
    Callback = function(v) _G.WallCheck = v end,
 })
-
 CombatTab:CreateSlider({
    Name = "FOV",
    Range = {0, 600},
@@ -51,35 +47,32 @@ CombatTab:CreateSlider({
    Callback = function(v) _G.FOV = v end,
 })
 
--- [[ SİSTEM MOTORU ]]
+-- [[ 👁️ ESP ]]
+local ESPTab = Window:CreateTab("👁️ ESP")
+ESPTab:CreateToggle({
+   Name = "Oyuncu ESP (Highlight)",
+   CurrentValue = false,
+   Callback = function(v) _G.ESP_Enabled = v end,
+})
+
+-- [[ 🚀 SİSTEM MOTORU ]]
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1.5
-FOVCircle.Color = Color3.fromRGB(0, 255, 255)
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
 
 local vim = game:GetService("VirtualInputManager")
 local UIS = game:GetService("UserInputService")
 
--- GELİŞMİŞ DUVAR KONTROLÜ
-local function IsVisible(targetPart)
+local function IsVisible(target)
     if not _G.WallCheck then return true end
-    
-    local char = game.Players.LocalPlayer.Character
     local cam = workspace.CurrentCamera
+    local char = game.Players.LocalPlayer.Character
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {char, cam}
     
-    local rayParams = RaycastParams.new()
-    rayParams.FilterType = Enum.RaycastFilterType.Exclude
-    rayParams.FilterDescendantsInstances = {char, cam} -- Kendimizi ve kamerayı görmezden gel
-    rayParams.IgnoreWater = true
-    
-    local result = workspace:Raycast(cam.CFrame.Position, (targetPart.Position - cam.CFrame.Position).Unit * 500, rayParams)
-    
-    -- Eğer ray bir şeye çarptıysa ve çarptığı şey hedefin parçası değilse duvar arkasındadır
-    if result then
-        local isHitTarget = result.Instance:IsDescendantOf(targetPart.Parent)
-        return isHitTarget
-    end
-    
-    return false
+    local result = workspace:Raycast(cam.CFrame.Position, (target.Position - cam.CFrame.Position).Unit * 600, params)
+    return result == nil or result.Instance:IsDescendantOf(target.Parent)
 end
 
 game:GetService("RunService").RenderStepped:Connect(function()
@@ -87,27 +80,38 @@ game:GetService("RunService").RenderStepped:Connect(function()
     FOVCircle.Radius = _G.FOV
     FOVCircle.Position = UIS:GetMouseLocation()
 
-    -- SAĞ TIK KONTROLÜNÜ TAMAMEN DEVRE DIŞI BIRAKAN SORGULAMA
-    local isKeyPressed = UIS:IsKeyDown(_G.AimKey)
-    local isRightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    -- ESP SİSTEMİ (Geri Geldi)
+    if _G.ESP_Enabled then
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v ~= game.Players.LocalPlayer and v.Character then
+                local h = v.Character:FindFirstChild("RoxyHighlight") or Instance.new("Highlight", v.Character)
+                h.Name = "RoxyHighlight"
+                h.FillColor = Color3.fromRGB(255, 0, 0)
+            end
+        end
+    else
+        for _, v in pairs(game.Players:GetPlayers()) do
+            if v.Character and v.Character:FindFirstChild("RoxyHighlight") then
+                v.Character.RoxyHighlight:Destroy()
+            end
+        end
+    end
 
-    -- SADECE belirlenen tuş basılıysa ve SAĞ TIK basılı DEĞİLSE çalış (Çakışmayı önler)
-    if _G.SilentAim and isKeyPressed and not (isRightClick and _G.AimKey ~= Enum.KeyCode.MouseButton2) then
+    -- KİLİTLENME VE ATEŞ ETME (Sağ Tık Engelleyici Eklendi)
+    local RightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+    
+    if _G.SilentAim and UIS:IsKeyDown(_G.AimKey) and not RightClick then
         local target = nil
         local dist = _G.FOV
         
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                
                 if vis then
                     local m = (Vector2.new(p.X, p.Y) - UIS:GetMouseLocation()).Magnitude
-                    if m < dist then
-                        -- Duvar kontrolü burada devreye girer
-                        if IsVisible(v.Character.HumanoidRootPart) then
-                            target = v.Character.HumanoidRootPart
-                            dist = m
-                        end
+                    if m < dist and IsVisible(v.Character.HumanoidRootPart) then
+                        target = v.Character.HumanoidRootPart
+                        dist = m
                     end
                 end
             end
@@ -117,12 +121,12 @@ game:GetService("RunService").RenderStepped:Connect(function()
             workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
             
             if _G.AutoShoot then
-                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                task.wait(0.01)
-                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                vim:SendMouseButtonEvent(UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y, 0, true, game, 0)
+                task.wait()
+                vim:SendMouseButtonEvent(UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y, 0, false, game, 0)
             end
         end
     end
 end)
 
-Rayfield:Notify({Title = "Wyvern Pro", Content = "Sağ Tık ve Duvar Arkası Tamamen Düzeltildi!", Duration = 5})
+Rayfield:Notify({Title = "Wyvern Pro V5", Content = "ESP Geri Geldi! Sağ Tık Yasaklandı.", Duration = 5})
