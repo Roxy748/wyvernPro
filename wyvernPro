@@ -1,19 +1,19 @@
--- [[ WYVERN PRO - AUTO SHOOT & NO MOUSE EDITION ]]
--- Edit By Roxy | Youtube: Pavlov
+-- [[ WYVERN PRO - ROXY ULTIMATE FIX ]]
+-- Edit By Roxy | Sağ Tık Bloklandı | Duvar Kontrolü V3
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
+-- Ayarlar
 _G.SilentAim = false
 _G.AimKey = Enum.KeyCode.E
 _G.FOV = 150
-_G.ESP = false
 _G.WallCheck = true
-_G.AutoShoot = false -- Yeni Özellik
+_G.AutoShoot = false
 
 local Window = Rayfield:CreateWindow({
    Name = "Wyvern Pro",
    LoadingTitle = "Edit By Roxy",
-   LoadingSubtitle = "Auto-Shoot Update",
+   LoadingSubtitle = "Anti-RightClick & WallFix",
    ConfigurationSaving = { Enabled = false }
 })
 
@@ -28,7 +28,6 @@ CombatTab:CreateToggle({
 CombatTab:CreateKeybind({
    Name = "Kilitleme Tuşu",
    CurrentKeybind = "E",
-   HoldToInteract = false,
    Callback = function(Key) _G.AimKey = Key end,
 })
 
@@ -39,7 +38,7 @@ CombatTab:CreateToggle({
 })
 
 CombatTab:CreateToggle({
-   Name = "Duvar Kontrolü",
+   Name = "Duvar Kontrolü (Wall Check)",
    CurrentValue = true,
    Callback = function(v) _G.WallCheck = v end,
 })
@@ -52,61 +51,78 @@ CombatTab:CreateSlider({
    Callback = function(v) _G.FOV = v end,
 })
 
--- LOGIC MOTORU
+-- [[ SİSTEM MOTORU ]]
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1.5
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Color = Color3.fromRGB(0, 255, 255)
 
-local function IsVisible(target)
+local vim = game:GetService("VirtualInputManager")
+local UIS = game:GetService("UserInputService")
+
+-- GELİŞMİŞ DUVAR KONTROLÜ
+local function IsVisible(targetPart)
     if not _G.WallCheck then return true end
+    
     local char = game.Players.LocalPlayer.Character
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = {char, target.Parent}
-    local result = workspace:Raycast(workspace.CurrentCamera.CFrame.Position, (target.Position - workspace.CurrentCamera.CFrame.Position).Unit * 500, params)
-    return result == nil
-end
-
--- Otomatik Ateş Fonksiyonu (Sol Tık Simülasyonu)
-local function Shoot()
-    local VirtualInputManager = game:GetService("VirtualInputManager")
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Sol Tık Bas
-    task.wait(0.05)
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) -- Sol Tık Bırak
+    local cam = workspace.CurrentCamera
+    
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    rayParams.FilterDescendantsInstances = {char, cam} -- Kendimizi ve kamerayı görmezden gel
+    rayParams.IgnoreWater = true
+    
+    local result = workspace:Raycast(cam.CFrame.Position, (targetPart.Position - cam.CFrame.Position).Unit * 500, rayParams)
+    
+    -- Eğer ray bir şeye çarptıysa ve çarptığı şey hedefin parçası değilse duvar arkasındadır
+    if result then
+        local isHitTarget = result.Instance:IsDescendantOf(targetPart.Parent)
+        return isHitTarget
+    end
+    
+    return false
 end
 
 game:GetService("RunService").RenderStepped:Connect(function()
     FOVCircle.Visible = _G.SilentAim
     FOVCircle.Radius = _G.FOV
-    FOVCircle.Position = game:GetService("UserInputService"):GetMouseLocation()
+    FOVCircle.Position = UIS:GetMouseLocation()
 
-    if _G.SilentAim and game:GetService("UserInputService"):IsKeyDown(_G.AimKey) then
+    -- SAĞ TIK KONTROLÜNÜ TAMAMEN DEVRE DIŞI BIRAKAN SORGULAMA
+    local isKeyPressed = UIS:IsKeyDown(_G.AimKey)
+    local isRightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+
+    -- SADECE belirlenen tuş basılıysa ve SAĞ TIK basılı DEĞİLSE çalış (Çakışmayı önler)
+    if _G.SilentAim and isKeyPressed and not (isRightClick and _G.AimKey ~= Enum.KeyCode.MouseButton2) then
         local target = nil
         local dist = _G.FOV
         
         for _, v in pairs(game.Players:GetPlayers()) do
             if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                 local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                
                 if vis then
-                    local m = (Vector2.new(p.X, p.Y) - game:GetService("UserInputService"):GetMouseLocation()).Magnitude
-                    if m < dist and IsVisible(v.Character.HumanoidRootPart) then
-                        target = v.Character.HumanoidRootPart
-                        dist = m
+                    local m = (Vector2.new(p.X, p.Y) - UIS:GetMouseLocation()).Magnitude
+                    if m < dist then
+                        -- Duvar kontrolü burada devreye girer
+                        if IsVisible(v.Character.HumanoidRootPart) then
+                            target = v.Character.HumanoidRootPart
+                            dist = m
+                        end
                     end
                 end
             end
         end
         
         if target then
-            -- Kilitlenme
             workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
             
-            -- Otomatik Ateş
             if _G.AutoShoot then
-                Shoot()
+                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                task.wait(0.01)
+                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
             end
         end
     end
 end)
 
-Rayfield:Notify({Title = "Wyvern Pro", Content = "Auto Shoot ve Tuş Kilidi Düzeldi!", Duration = 5})
+Rayfield:Notify({Title = "Wyvern Pro", Content = "Sağ Tık ve Duvar Arkası Tamamen Düzeltildi!", Duration = 5})
