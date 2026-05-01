@@ -1,139 +1,355 @@
--- [[ WYVERN PRO - ROXY MULTI-LANGUAGE V8 ]]
--- Edit By Roxy | Auto Shoot | Keybind | Dual Language
+-- // CONFIGURAÇÃO DA KEY //
+local correctKey = "lua2026"
+local keyLink = "https://link-center.net/5213310/A6wQfYBp5IF5"
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- // INTERFACE DO SISTEMA DE KEY //
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local KeyInput = Instance.new("TextBox")
+local VerifyBtn = Instance.new("TextButton")
+local GetKeyBtn = Instance.new("TextButton")
 
--- Global Ayarlar
-_G.SilentAim = false
-_G.AimKey = Enum.KeyCode.E
-_G.FOV = 150
-_G.ESP = false
-_G.AutoShoot = false
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Name = "WyvernKeySystem"
 
--- Pencere Kurulumu
-local Window = Rayfield:CreateWindow({
-   Name = "Wyvern Pro | Edit By Roxy",
-   LoadingTitle = "Roxy Hub",
-   LoadingSubtitle = "Youtube: Pavlov",
-   ConfigurationSaving = { Enabled = false }
-})
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+MainFrame.Size = UDim2.new(0, 250, 0, 150)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
--- [[ 🌍 LANGUAGE / DİL SEKMESİ ]]
-local LangTab = Window:CreateTab("🌍 Language / Dil")
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "WYVERN PRO | ANAHTAR SİSTEMİ"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
-local function NotifyLang(title, content)
-    Rayfield:Notify({Title = title, Content = content, Duration = 3})
+KeyInput.Parent = MainFrame
+KeyInput.PlaceholderText = "Anahtarı buraya girin..."
+KeyInput.Size = UDim2.new(0, 200, 0, 30)
+KeyInput.Position = UDim2.new(0.5, -100, 0.4, 0)
+KeyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+KeyInput.TextColor3 = Color3.new(1, 1, 1)
+
+VerifyBtn.Parent = MainFrame
+VerifyBtn.Text = "Doğrula"
+VerifyBtn.Size = UDim2.new(0, 90, 0, 30)
+VerifyBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
+VerifyBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+VerifyBtn.TextColor3 = Color3.new(1, 1, 1)
+
+GetKeyBtn.Parent = MainFrame
+GetKeyBtn.Text = "Anahtar Al"
+GetKeyBtn.Size = UDim2.new(0, 90, 0, 30)
+GetKeyBtn.Position = UDim2.new(0.55, 0, 0.7, 0)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+
+-- // FUNÇÕES DA KEY //
+local function StartScript()
+    ScreenGui:Destroy()
+    
+    local LibraryUrl = "https://raw.githubusercontent.com/Vovabro46/trash/refs/heads/main/Test.lua"
+    local Success, Library = pcall(function()
+        return loadstring(game:HttpGet(LibraryUrl))()
+    end)
+
+    if not Success or not Library then return end
+
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local Workspace = game:GetService("Workspace")
+    local UserInputService = game:GetService("UserInputService")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = Workspace.CurrentCamera
+
+    -- ESP & AIMBOT SETTINGS (DİL DESTEKLİ)
+    local ESP_Settings = {
+        Enabled = false,
+        LimitDistance = 2000,
+        TeamCheck = false,
+        TextSize = 13,
+        Font = 2,
+        Box = { Enabled = false, Color = Color3.fromRGB(255, 255, 255), Outline = true },
+        BoxFill = { Enabled = false, Color = Color3.fromRGB(255, 255, 255), Transparency = 0.5 },
+        Name = { Enabled = false, Color = Color3.fromRGB(255, 255, 255) },
+        Distance = { Enabled = false, Color = Color3.fromRGB(200, 200, 200) },
+        HealthBar = { Enabled = false },
+        Tracer = { Enabled = false, Origin = "Bottom", Color = Color3.fromRGB(255, 255, 255) },
+        Skeleton = { Enabled = false, Color = Color3.fromRGB(255, 255, 255), Thickness = 1 },
+        Chams = { Enabled = false, FillColor = Color3.fromRGB(255, 0, 0), OutlineColor = Color3.fromRGB(255, 255, 255), FillTransparency = 0.5, OutlineTransparency = 0 }
+    }
+
+    local Aimbot = {
+        Enabled = false, ToggleMode = false, TeamCheck = false, VisibleCheck = false,
+        AimPart = "Head", FOV = 160, FOV_Enabled = false, FOV_Color = Color3.fromRGB(255, 0, 255),
+        FOV_LockedColor = Color3.fromRGB(0, 255, 0), Smoothness = 10, Prediction = false, PredictionAmount = 0.142
+    }
+
+    -- ESP CACHE VE DRAWING FONKSİYONLARI BURADA DEVAM EDER (ORİJİNAL MANTIK)
+    local ESP_Cache = {}
+    local function NewDrawing(Type, Properties)
+        local Obj = Drawing.new(Type)
+        for k, v in pairs(Properties) do Obj[k] = v end
+        return Obj
+    end
+
+    local function CreateESP(Player)
+        local Objects = {
+            Box = NewDrawing("Square", {Thickness = 1, ZIndex = 2, Visible = false}),
+            BoxOutline = NewDrawing("Square", {Thickness = 3, Color = Color3.new(0,0,0), ZIndex = 1, Visible = false}),
+            BoxFill = NewDrawing("Square", {Filled = true, ZIndex = 0, Visible = false}),
+            Name = NewDrawing("Text", {Text = Player.Name, Center = true, Size = ESP_Settings.TextSize, Font = ESP_Settings.Font, Outline = true, ZIndex = 3, Visible = false}),
+            Distance = NewDrawing("Text", {Center = true, Size = ESP_Settings.TextSize - 1, Font = ESP_Settings.Font, Outline = true, ZIndex = 3, Visible = false}),
+            HealthBar = NewDrawing("Square", {Filled = true, ZIndex = 2, Visible = false}),
+            HealthBarOutline = NewDrawing("Square", {Filled = true, Color = Color3.new(0,0,0), ZIndex = 1, Visible = false}),
+            Tracer = NewDrawing("Line", {Thickness = 1, ZIndex = 2, Visible = false}),
+            TracerOutline = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0), ZIndex = 1, Visible = false}),
+            SkeletonLines = {}, Highlight = nil
+        }
+        for i = 1, 16 do table.insert(Objects.SkeletonLines, NewDrawing("Line", {Thickness = 1, ZIndex = 2, Visible = false})) end
+        ESP_Cache[Player] = Objects
+    end
+
+    local function RemoveESP(Player)
+        if ESP_Cache[Player] then
+            for k, v in pairs(ESP_Cache[Player]) do
+                if k == "Highlight" and v then v:Destroy()
+                elseif k == "SkeletonLines" then for _, line in pairs(v) do line:Remove() end
+                elseif v and v.Remove then v:Remove() end
+            end
+            ESP_Cache[Player] = nil
+        end
+    end
+
+    -- SKELETON & RENDER LOGIC
+    local SkeletonConnections = {
+        {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
+        {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
+        {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
+        {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
+        {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"},
+        {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}
+    }
+
+    RunService.RenderStepped:Connect(function()
+        for Player, Objects in pairs(ESP_Cache) do
+            local Character = Player.Character
+            local Humanoid = Character and Character:FindFirstChild("Humanoid")
+            local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
+            local IsValid = ESP_Settings.Enabled and Character and Humanoid and RootPart and Humanoid.Health > 0
+            local IsTeammate = ESP_Settings.TeamCheck and Player.Team == LocalPlayer.Team
+            
+            if IsValid and not IsTeammate then
+                local HRP_Pos, OnScreen = Camera:WorldToViewportPoint(RootPart.Position)
+                local Dist = (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) and (LocalPlayer.Character.HumanoidRootPart.Position - RootPart.Position).Magnitude or 0
+
+                if ESP_Settings.Chams.Enabled then
+                    if not Objects.Highlight or Objects.Highlight.Parent ~= Character then
+                        if Objects.Highlight then Objects.Highlight:Destroy() end
+                        local HL = Instance.new("Highlight")
+                        HL.Parent = Character; HL.Adornee = Character; HL.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        Objects.Highlight = HL
+                    end
+                    local HL = Objects.Highlight
+                    HL.FillColor = ESP_Settings.Chams.FillColor; HL.OutlineColor = ESP_Settings.Chams.OutlineColor
+                    HL.FillTransparency = ESP_Settings.Chams.FillTransparency; HL.OutlineTransparency = ESP_Settings.Chams.OutlineTransparency
+                    HL.Enabled = true
+                else
+                    if Objects.Highlight then Objects.Highlight:Destroy() Objects.Highlight = nil end
+                end
+
+                if OnScreen and Dist <= ESP_Settings.LimitDistance then
+                    local ScaleFactor = 1 / (HRP_Pos.Z * math.tan(math.rad(Camera.FieldOfView * 0.5)) * 2) * 1000
+                    local Width, Height = math.floor(4 * ScaleFactor), math.floor(6 * ScaleFactor)
+                    local BoxPos = Vector2.new(math.floor(HRP_Pos.X - Width * 0.5), math.floor(HRP_Pos.Y - Height * 0.5))
+
+                    if ESP_Settings.Box.Enabled then
+                        Objects.Box.Size = Vector2.new(Width, Height); Objects.Box.Position = BoxPos; Objects.Box.Color = ESP_Settings.Box.Color; Objects.Box.Visible = true
+                        Objects.BoxOutline.Size = Vector2.new(Width, Height); Objects.BoxOutline.Position = BoxPos; Objects.BoxOutline.Visible = ESP_Settings.Box.Outline
+                    else Objects.Box.Visible = false; Objects.BoxOutline.Visible = false end
+
+                    if ESP_Settings.BoxFill.Enabled and ESP_Settings.Box.Enabled then
+                        Objects.BoxFill.Size = Vector2.new(Width, Height); Objects.BoxFill.Position = BoxPos; Objects.BoxFill.Color = ESP_Settings.BoxFill.Color; Objects.BoxFill.Transparency = ESP_Settings.BoxFill.Transparency; Objects.BoxFill.Visible = true
+                    else Objects.BoxFill.Visible = false end
+
+                    if ESP_Settings.Name.Enabled then
+                        Objects.Name.Position = Vector2.new(BoxPos.X + Width / 2, BoxPos.Y - Objects.Name.TextBounds.Y - 2); Objects.Name.Color = ESP_Settings.Name.Color; Objects.Name.Visible = true
+                    else Objects.Name.Visible = false end
+
+                    if ESP_Settings.Distance.Enabled then
+                        Objects.Distance.Text = math.floor(Dist) .. "m"; Objects.Distance.Position = Vector2.new(BoxPos.X + Width / 2, BoxPos.Y + Height + 2); Objects.Distance.Color = ESP_Settings.Distance.Color; Objects.Distance.Visible = true
+                    else Objects.Distance.Visible = false end
+
+                    if ESP_Settings.HealthBar.Enabled then
+                        local BarWidth = 2; local HealthY = Height * (Humanoid.Health / Humanoid.MaxHealth)
+                        Objects.HealthBarOutline.Size = Vector2.new(BarWidth + 2, Height + 2); Objects.HealthBarOutline.Position = Vector2.new(BoxPos.X - BarWidth - 6, BoxPos.Y - 1); Objects.HealthBarOutline.Visible = true
+                        Objects.HealthBar.Size = Vector2.new(BarWidth, HealthY); Objects.HealthBar.Position = Vector2.new(BoxPos.X - BarWidth - 5, BoxPos.Y + (Height - HealthY)); Objects.HealthBar.Color = Color3.fromHSV((Humanoid.Health / Humanoid.MaxHealth) * 0.3, 1, 1); Objects.HealthBar.Visible = true
+                    else Objects.HealthBar.Visible = false; Objects.HealthBarOutline.Visible = false end
+
+                    if ESP_Settings.Tracer.Enabled then
+                        local Origin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        if ESP_Settings.Tracer.Origin == "Center" then Origin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                        elseif ESP_Settings.Tracer.Origin == "Mouse" then local M = UserInputService:GetMouseLocation() Origin = Vector2.new(M.X, M.Y) end
+                        Objects.Tracer.From = Origin; Objects.Tracer.To = Vector2.new(HRP_Pos.X, HRP_Pos.Y); Objects.Tracer.Color = ESP_Settings.Tracer.Color; Objects.Tracer.Visible = true
+                        Objects.TracerOutline.From = Origin; Objects.TracerOutline.To = Vector2.new(HRP_Pos.X, HRP_Pos.Y); Objects.TracerOutline.Visible = true
+                    else Objects.Tracer.Visible = false; Objects.TracerOutline.Visible = false end
+
+                    if ESP_Settings.Skeleton.Enabled then
+                        local lineIndex = 1
+                        for _, pair in ipairs(SkeletonConnections) do
+                            local p1 = Character:FindFirstChild(pair[1]); local p2 = Character:FindFirstChild(pair[2])
+                            if p1 and p2 then
+                                local pos1, onScreen1 = Camera:WorldToViewportPoint(p1.Position); local pos2, onScreen2 = Camera:WorldToViewportPoint(p2.Position)
+                                if onScreen1 or onScreen2 then
+                                    local line = Objects.SkeletonLines[lineIndex]
+                                    if line then line.From = Vector2.new(pos1.X, pos1.Y); line.To = Vector2.new(pos2.X, pos2.Y); line.Color = ESP_Settings.Skeleton.Color; line.Thickness = ESP_Settings.Skeleton.Thickness; line.Visible = true; lineIndex = lineIndex + 1 end
+                                end
+                            end
+                        end
+                        for i = lineIndex, #Objects.SkeletonLines do Objects.SkeletonLines[i].Visible = false end
+                    else for _, line in pairs(Objects.SkeletonLines) do line.Visible = false end end
+                else for k, v in pairs(Objects) do if k == "SkeletonLines" then for _, l in pairs(v) do l.Visible = false end elseif typeof(v) ~= "Instance" then v.Visible = false end end end
+            else
+                for k, v in pairs(Objects) do if k == "SkeletonLines" then for _, l in pairs(v) do l.Visible = false end elseif typeof(v) ~= "Instance" then v.Visible = false end end
+                if Objects.Highlight then Objects.Highlight:Destroy() Objects.Highlight = nil end
+            end
+        end
+    end)
+
+    Players.PlayerAdded:Connect(CreateESP)
+    Players.PlayerRemoving:Connect(RemoveESP)
+    for _, Plr in ipairs(Players:GetPlayers()) do if Plr ~= LocalPlayer then CreateESP(Plr) end end
+
+    -- FOV SYSTEM
+    local FOV_ScreenGui = Instance.new("ScreenGui")
+    FOV_ScreenGui.Name = "WYVERN_FOV"
+    FOV_ScreenGui.Parent = game:GetService("CoreGui")
+
+    local FOV_Frame = Instance.new("Frame")
+    FOV_Frame.BackgroundTransparency = 1; FOV_Frame.AnchorPoint = Vector2.new(0.5, 0.5); FOV_Frame.Position = UDim2.new(0.5, 0, 0.5, 0); FOV_Frame.Size = UDim2.new(0, Aimbot.FOV * 2, 0, Aimbot.FOV * 2)
+    
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Thickness = 2.5; Stroke.Color = Aimbot.FOV_Color; Stroke.Transparency = 0.25; Stroke.Parent = FOV_Frame
+    local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(1, 0); Corner.Parent = FOV_Frame
+    FOV_Frame.Parent = FOV_ScreenGui
+
+    local function UpdateFOV()
+        FOV_Frame.Size = UDim2.new(0, Aimbot.FOV * 2, 0, Aimbot.FOV * 2); FOV_Frame.Visible = Aimbot.FOV_Enabled and Aimbot.Enabled; Stroke.Color = Aimbot.FOV_Color
+    end
+
+    local function GetTarget()
+        local closest = nil; local bestDist = Aimbot.FOV
+        for _, plr in Players:GetPlayers() do
+            if plr == LocalPlayer or not plr.Character or plr.Character:FindFirstChild("Humanoid").Health <= 0 then continue end
+            if Aimbot.TeamCheck and plr.Team == LocalPlayer.Team then continue end
+            local part = plr.Character:FindFirstChild(Aimbot.AimPart) or plr.Character:FindFirstChild("HumanoidRootPart")
+            if not part then continue end
+            local pos = part.Position
+            if Aimbot.Prediction then pos = pos + (part.Velocity * Aimbot.PredictionAmount) end
+            local screenPos, onScreen = Camera:WorldToViewportPoint(pos)
+            if not onScreen then continue end
+            local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+            if dist >= bestDist then continue end
+            if Aimbot.VisibleCheck then
+                local rayParams = RaycastParams.new(); rayParams.FilterDescendantsInstances = {LocalPlayer.Character}; rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                local result = Workspace:Raycast(Camera.CFrame.Position, pos - Camera.CFrame.Position, rayParams)
+                if result and not result.Instance:IsDescendantOf(plr.Character) then continue end
+            end
+            bestDist = dist; closest = pos
+        end
+        return closest
+    end
+
+    RunService.Heartbeat:Connect(function()
+        UpdateFOV()
+        -- Sağ Tık Basılı Değilken (not RightClick) logic'i eklendi
+        local isRightClick = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+        local shouldAim = Aimbot.Enabled and (Aimbot.ToggleMode or isRightClick) and not (not isRightClick and not Aimbot.ToggleMode)
+
+        if not shouldAim then Stroke.Color = Aimbot.FOV_Color return end
+        local target = GetTarget()
+        if target then
+            Stroke.Color = Aimbot.FOV_LockedColor
+            local look = CFrame.lookAt(Camera.CFrame.Position, target)
+            Camera.CFrame = Camera.CFrame:Lerp(look, 1 / Aimbot.Smoothness)
+        else Stroke.Color = Aimbot.FOV_Color end
+    end)
+
+    -- // UI LIBRARY - TÜRKÇE & ROXY ÖZEL //
+    Library:Watermark("WYVERN PRO | Edit By Roxy")
+    local Window = Library:Window("WYVERN PRO")
+
+    Window:Section("Ana Menü / Main")
+
+    local VisualsTab = Window:Tab("Görsel / Visuals")
+    local EspPage = VisualsTab:SubTab("ESP")
+    local ChamsPage = VisualsTab:SubTab("Chams")
+
+    local MasterGroup = EspPage:Groupbox("Aktivasyon", "Left")
+    MasterGroup:AddToggle({ Title = "ESP Aktif", Default = false, Callback = function(V) ESP_Settings.Enabled = V end })
+
+    local ElementsGroup = EspPage:Groupbox("Elemanlar", "Left")
+    ElementsGroup:AddToggle({ Title = "Kutular (Box)", Default = false, Callback = function(V) ESP_Settings.Box.Enabled = V end })
+    ElementsGroup:AddToggle({ Title = "İskelet (Skeleton)", Default = false, Callback = function(V) ESP_Settings.Skeleton.Enabled = V end })
+    ElementsGroup:AddToggle({ Title = "İsimler (Names)", Default = false, Callback = function(V) ESP_Settings.Name.Enabled = V end })
+    ElementsGroup:AddToggle({ Title = "Can Barı (Health)", Default = false, Callback = function(V) ESP_Settings.HealthBar.Enabled = V end })
+    ElementsGroup:AddToggle({ Title = "Mesafe (Distance)", Default = false, Callback = function(V) ESP_Settings.Distance.Enabled = V end })
+    ElementsGroup:AddToggle({ Title = "Çizgiler (Tracers)", Default = false, Callback = function(V) ESP_Settings.Tracer.Enabled = V end })
+
+    local EspSettingsGroup = EspPage:Groupbox("Ayarlar / Settings", "Right")
+    EspSettingsGroup:AddColorPicker({ Title = "Kutu Rengi", Default = ESP_Settings.Box.Color, Callback = function(V) ESP_Settings.Box.Color = V end })
+    EspSettingsGroup:AddColorPicker({ Title = "İskelet Rengi", Default = ESP_Settings.Skeleton.Color, Callback = function(V) ESP_Settings.Skeleton.Color = V end })
+    EspSettingsGroup:AddToggle({ Title = "Kutu İçi Dolu", Default = false, Callback = function(V) ESP_Settings.BoxFill.Enabled = V end })
+    EspSettingsGroup:AddSlider({ Title = "Maks Mesafe", Min = 100, Max = 5000, Default = 2000, Suffix = " studs", Callback = function(V) ESP_Settings.LimitDistance = V end })
+
+    local ChamsGroup = ChamsPage:Groupbox("Chams", "Left")
+    ChamsGroup:AddToggle({ Title = "Chams Aktif", Default = false, Callback = function(V) ESP_Settings.Chams.Enabled = V end })
+
+    local AimbotTab = Window:Tab("Aimbot")
+    local Page = AimbotTab:SubTab("Ana / Main")
+
+    Page:Groupbox("Aimbot Kontrol", "Left"):AddToggle({ Title = "Aimbot Aktif", Default = false, Callback = function(v) Aimbot.Enabled = v end })
+    Page:Groupbox("Aimbot Kontrol", "Left"):AddToggle({ Title = "Aç/Kapat Modu (Mobil)", Default = false, Description = "AÇIK / KAPALI", Callback = function(v) Aimbot.ToggleMode = v end })
+    Page:Groupbox("Aimbot Kontrol", "Left"):AddDropdown({ Title = "Hedef Bölge", Values = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso"}, Default = "Head", Callback = function(v) Aimbot.AimPart = v end })
+    Page:Groupbox("Kontroller", "Left"):AddToggle({ Title = "Duvar Kontrolü (Visible)", Default = false, Callback = function(v) Aimbot.VisibleCheck = v end })
+
+    Page:Groupbox("FOV Ayarları", "Right"):AddToggle({ Title = "FOV Çemberini Göster", Default = false, Callback = function(v) Aimbot.FOV_Enabled = v UpdateFOV() end })
+    Page:Groupbox("FOV Ayarları", "Right"):AddSlider({ Title = "FOV Boyutu", Min = 10, Max = 600, Default = 160, Callback = function(v) Aimbot.FOV = v UpdateFOV() end })
+    Page:Groupbox("Yumuşaklık", "Left"):AddSlider({ Title = "Smoothness (Yumuşaklık)", Min = 1, Max = 50, Default = 10, Suffix = " (düşük = hızlı)", Callback = function(v) Aimbot.Smoothness = v end })
+
+    Window:Section("Sistem / System")
+    local SettingsTab = Window:Tab("Ayarlar / Settings")
+    local SettingsPage = SettingsTab:SubTab("Menü Ayarları")
+
+    local ConfigGroup = SettingsPage:Groupbox("Konfigürasyon", "Left")
+    ConfigGroup:AddButton({ Title = "Ayarları Kaydet", Callback = function() Library:SaveConfig("WyvernDefault") end })
+    ConfigGroup:AddButton({ Title = "Ayarları Yükle", Callback = function() Library:LoadConfig("WyvernDefault") end })
+
+    local UISettings = SettingsPage:Groupbox("Arayüz Ayarları", "Right")
+    UISettings:AddButton({ Title = "Hileyi Kapat (Destroy)", Callback = function() 
+        local gui = game:GetService("CoreGui"):FindFirstChild("WyvernPro")
+        if gui then gui:Destroy() end
+    end })
 end
 
--- Menü Elemanlarını Tanımlayalım (Dil değiştikçe güncellenecekler)
-local CombatTab = Window:CreateTab("⚔️ Combat")
-local VisualsTab = Window:CreateTab("👁️ Visuals")
-
--- ⚔️ COMBAT ELEMENTS
-local SA_Toggle = CombatTab:CreateToggle({
-   Name = "Silent Aim (Off)",
-   CurrentValue = false,
-   Callback = function(v) _G.SilentAim = v end,
-})
-
-local Key_Bind = CombatTab:CreateKeybind({
-   Name = "Aim Key",
-   CurrentKeybind = "E",
-   Callback = function(Key) _G.AimKey = Key end,
-})
-
-local AS_Toggle = CombatTab:CreateToggle({
-   Name = "Auto Shoot (Off)",
-   CurrentValue = false,
-   Callback = function(v) _G.AutoShoot = v end,
-})
-
-local FOV_Slider = CombatTab:CreateSlider({
-   Name = "FOV Area",
-   Range = {0, 600},
-   Increment = 10,
-   CurrentValue = 150,
-   Callback = function(v) _G.FOV = v end,
-})
-
--- 👁️ VISUAL ELEMENTS
-local ESP_Toggle = VisualsTab:CreateToggle({
-   Name = "Player ESP",
-   CurrentValue = false,
-   Callback = function(v) _G.ESP = v end,
-})
-
--- DİL DEĞİŞTİRME BUTONLARI
-LangTab:CreateButton({
-   Name = "Türkçe Ayarla",
-   Callback = function()
-       SA_Toggle:Set("Silent Aim Aktif")
-       Key_Bind:Set("Kilitleme Tuşu")
-       AS_Toggle:Set("Otomatik Ateş")
-       FOV_Slider:Set("Görüş Alanı")
-       ESP_Toggle:Set("Oyuncu ESP")
-       NotifyLang("Başarılı", "Dil Türkçe olarak ayarlandı!")
-   end,
-})
-
-LangTab:CreateButton({
-   Name = "Set English",
-   Callback = function()
-       SA_Toggle:Set("Silent Aim Active")
-       Key_Bind:Set("Aim Key")
-       AS_Toggle:Set("Auto Shoot")
-       FOV_Slider:Set("FOV Area")
-       ESP_Toggle:Set("Player ESP")
-       NotifyLang("Success", "Language set to English!")
-   end,
-})
-
--- [[ SİSTEM MOTORU ]]
-local UIS = game:GetService("UserInputService")
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 1.5
-FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    FOVCircle.Visible = _G.SilentAim
-    FOVCircle.Radius = _G.FOV
-    FOVCircle.Position = UIS:GetMouseLocation()
-
-    -- ESP Sistemi
-    if _G.ESP then
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character then
-                local h = v.Character:FindFirstChild("RoxyESP") or Instance.new("Highlight", v.Character)
-                h.Name = "RoxyESP"
-                h.FillColor = Color3.fromRGB(255, 0, 0)
-            end
-        end
+VerifyBtn.MouseButton1Click:Connect(function()
+    if KeyInput.Text == correctKey then
+        StartScript()
+    else
+        VerifyBtn.Text = "Hatalı Anahtar!"
+        task.wait(2)
+        VerifyBtn.Text = "Doğrula"
     end
+end)
 
-    -- SILENT AIM (Sağ Tık Engelleyici Dahil)
-    local RightClick = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-    if _G.SilentAim and UIS:IsKeyDown(_G.AimKey) and not RightClick then
-        local target = nil
-        local dist = _G.FOV
-        for _, v in pairs(game.Players:GetPlayers()) do
-            if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                local p, vis = workspace.CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                if vis then
-                    local m = (Vector2.new(p.X, p.Y) - UIS:GetMouseLocation()).Magnitude
-                    if m < dist then
-                        target = v.Character.HumanoidRootPart
-                        dist = m
-                    end
-                end
-            end
-        end
-        if target then
-            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Position)
-            if _G.AutoShoot then
-                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,game,0)
-                task.wait()
-                game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,game,0)
-            end
-        end
-    end
+GetKeyBtn.MouseButton1Click:Connect(function()
+    setclipboard(keyLink)
+    GetKeyBtn.Text = "Link Kopyalandı!"
+    task.wait(2)
+    GetKeyBtn.Text = "Anahtar Al"
 end)
