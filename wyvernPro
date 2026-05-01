@@ -1,8 +1,8 @@
--- // CONFIGURAÇÃO DA KEY //
-local correctKey = "lua2026"
-local keyLink = "https://link-center.net/5213310/A6wQfYBp5IF5"
+-- // Key Sistemi //
+local correctKey = "Wyvern"
+local keyLink = "https://discord.gg/HHyvyWDy3a"
 
--- // INTERFACE DO SISTEMA DE KEY //
+-- // ANA SİSTEM ARAYÜZÜ //
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
@@ -49,10 +49,35 @@ GetKeyBtn.Position = UDim2.new(0.55, 0, 0.7, 0)
 GetKeyBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
 
--- // FUNÇÕES DA KEY //
+-- // ANA SCRIPT BAŞLANGICI //
 local function StartScript()
     ScreenGui:Destroy()
+
+    -- // SAĞ ÜST KÖŞE ROXY İMZASI //
+    local RoxyLabelGui = Instance.new("ScreenGui")
+    local RoxyLabel = Instance.new("TextLabel")
     
+    RoxyLabelGui.Name = "RoxySignature"
+    RoxyLabelGui.Parent = game:GetService("CoreGui")
+    RoxyLabelGui.DisplayOrder = 999
+    
+    RoxyLabel.Parent = RoxyLabelGui
+    RoxyLabel.BackgroundTransparency = 1
+    RoxyLabel.Position = UDim2.new(1, -210, 0, 15)
+    RoxyLabel.Size = UDim2.new(0, 200, 0, 30)
+    RoxyLabel.Font = Enum.Font.GothamBold
+    RoxyLabel.Text = "Edit By Roxy"
+    RoxyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    RoxyLabel.TextSize = 20
+    RoxyLabel.TextXAlignment = Enum.TextXAlignment.Right
+    
+    -- Yazıya gölge efekti
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Parent = RoxyLabel
+    Stroke.Thickness = 1.5
+    Stroke.Color = Color3.fromRGB(0, 0, 0)
+    
+    -- // HİLE KÜTÜPHANESİ //
     local LibraryUrl = "https://raw.githubusercontent.com/Vovabro46/trash/refs/heads/main/Test.lua"
     local Success, Library = pcall(function()
         return loadstring(game:HttpGet(LibraryUrl))()
@@ -67,13 +92,8 @@ local function StartScript()
     local LocalPlayer = Players.LocalPlayer
     local Camera = Workspace.CurrentCamera
 
-    -- ESP & AIMBOT SETTINGS (DİL DESTEKLİ)
     local ESP_Settings = {
-        Enabled = false,
-        LimitDistance = 2000,
-        TeamCheck = false,
-        TextSize = 13,
-        Font = 2,
+        Enabled = false, LimitDistance = 2000, TeamCheck = false, TextSize = 13, Font = 2,
         Box = { Enabled = false, Color = Color3.fromRGB(255, 255, 255), Outline = true },
         BoxFill = { Enabled = false, Color = Color3.fromRGB(255, 255, 255), Transparency = 0.5 },
         Name = { Enabled = false, Color = Color3.fromRGB(255, 255, 255) },
@@ -90,7 +110,6 @@ local function StartScript()
         FOV_LockedColor = Color3.fromRGB(0, 255, 0), Smoothness = 10, Prediction = false, PredictionAmount = 0.142
     }
 
-    -- ESP CACHE VE DRAWING FONKSİYONLARI BURADA DEVAM EDER (ORİJİNAL MANTIK)
     local ESP_Cache = {}
     local function NewDrawing(Type, Properties)
         local Obj = Drawing.new(Type)
@@ -126,7 +145,6 @@ local function StartScript()
         end
     end
 
-    -- SKELETON & RENDER LOGIC
     local SkeletonConnections = {
         {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
         {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
@@ -232,14 +250,13 @@ local function StartScript()
 
     local FOV_Frame = Instance.new("Frame")
     FOV_Frame.BackgroundTransparency = 1; FOV_Frame.AnchorPoint = Vector2.new(0.5, 0.5); FOV_Frame.Position = UDim2.new(0.5, 0, 0.5, 0); FOV_Frame.Size = UDim2.new(0, Aimbot.FOV * 2, 0, Aimbot.FOV * 2)
-    
-    local Stroke = Instance.new("UIStroke")
-    Stroke.Thickness = 2.5; Stroke.Color = Aimbot.FOV_Color; Stroke.Transparency = 0.25; Stroke.Parent = FOV_Frame
+    local StrokeFOV = Instance.new("UIStroke")
+    StrokeFOV.Thickness = 2.5; StrokeFOV.Color = Aimbot.FOV_Color; StrokeFOV.Transparency = 0.25; StrokeFOV.Parent = FOV_Frame
     local Corner = Instance.new("UICorner"); Corner.CornerRadius = UDim.new(1, 0); Corner.Parent = FOV_Frame
     FOV_Frame.Parent = FOV_ScreenGui
 
     local function UpdateFOV()
-        FOV_Frame.Size = UDim2.new(0, Aimbot.FOV * 2, 0, Aimbot.FOV * 2); FOV_Frame.Visible = Aimbot.FOV_Enabled and Aimbot.Enabled; Stroke.Color = Aimbot.FOV_Color
+        FOV_Frame.Size = UDim2.new(0, Aimbot.FOV * 2, 0, Aimbot.FOV * 2); FOV_Frame.Visible = Aimbot.FOV_Enabled and Aimbot.Enabled; StrokeFOV.Color = Aimbot.FOV_Color
     end
 
     local function GetTarget()
@@ -267,25 +284,22 @@ local function StartScript()
 
     RunService.Heartbeat:Connect(function()
         UpdateFOV()
-        -- Sağ Tık Basılı Değilken (not RightClick) logic'i eklendi
         local isRightClick = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
         local shouldAim = Aimbot.Enabled and (Aimbot.ToggleMode or isRightClick) and not (not isRightClick and not Aimbot.ToggleMode)
 
-        if not shouldAim then Stroke.Color = Aimbot.FOV_Color return end
+        if not shouldAim then StrokeFOV.Color = Aimbot.FOV_Color return end
         local target = GetTarget()
         if target then
-            Stroke.Color = Aimbot.FOV_LockedColor
+            StrokeFOV.Color = Aimbot.FOV_LockedColor
             local look = CFrame.lookAt(Camera.CFrame.Position, target)
             Camera.CFrame = Camera.CFrame:Lerp(look, 1 / Aimbot.Smoothness)
-        else Stroke.Color = Aimbot.FOV_Color end
+        else StrokeFOV.Color = Aimbot.FOV_Color end
     end)
 
-    -- // UI LIBRARY - TÜRKÇE & ROXY ÖZEL //
     Library:Watermark("WYVERN PRO | Edit By Roxy")
     local Window = Library:Window("WYVERN PRO")
 
     Window:Section("Ana Menü / Main")
-
     local VisualsTab = Window:Tab("Görsel / Visuals")
     local EspPage = VisualsTab:SubTab("ESP")
     local ChamsPage = VisualsTab:SubTab("Chams")
@@ -314,10 +328,7 @@ local function StartScript()
     local Page = AimbotTab:SubTab("Ana / Main")
 
     Page:Groupbox("Aimbot Kontrol", "Left"):AddToggle({ Title = "Aimbot Aktif", Default = false, Callback = function(v) Aimbot.Enabled = v end })
-    Page:Groupbox("Aimbot Kontrol", "Left"):AddToggle({ Title = "Aç/Kapat Modu (Mobil)", Default = false, Description = "AÇIK / KAPALI", Callback = function(v) Aimbot.ToggleMode = v end })
-    Page:Groupbox("Aimbot Kontrol", "Left"):AddDropdown({ Title = "Hedef Bölge", Values = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso"}, Default = "Head", Callback = function(v) Aimbot.AimPart = v end })
     Page:Groupbox("Kontroller", "Left"):AddToggle({ Title = "Duvar Kontrolü (Visible)", Default = false, Callback = function(v) Aimbot.VisibleCheck = v end })
-
     Page:Groupbox("FOV Ayarları", "Right"):AddToggle({ Title = "FOV Çemberini Göster", Default = false, Callback = function(v) Aimbot.FOV_Enabled = v UpdateFOV() end })
     Page:Groupbox("FOV Ayarları", "Right"):AddSlider({ Title = "FOV Boyutu", Min = 10, Max = 600, Default = 160, Callback = function(v) Aimbot.FOV = v UpdateFOV() end })
     Page:Groupbox("Yumuşaklık", "Left"):AddSlider({ Title = "Smoothness (Yumuşaklık)", Min = 1, Max = 50, Default = 10, Suffix = " (düşük = hızlı)", Callback = function(v) Aimbot.Smoothness = v end })
@@ -326,14 +337,12 @@ local function StartScript()
     local SettingsTab = Window:Tab("Ayarlar / Settings")
     local SettingsPage = SettingsTab:SubTab("Menü Ayarları")
 
-    local ConfigGroup = SettingsPage:Groupbox("Konfigürasyon", "Left")
-    ConfigGroup:AddButton({ Title = "Ayarları Kaydet", Callback = function() Library:SaveConfig("WyvernDefault") end })
-    ConfigGroup:AddButton({ Title = "Ayarları Yükle", Callback = function() Library:LoadConfig("WyvernDefault") end })
-
     local UISettings = SettingsPage:Groupbox("Arayüz Ayarları", "Right")
     UISettings:AddButton({ Title = "Hileyi Kapat (Destroy)", Callback = function() 
         local gui = game:GetService("CoreGui"):FindFirstChild("WyvernPro")
+        local sig = game:GetService("CoreGui"):FindFirstChild("RoxySignature")
         if gui then gui:Destroy() end
+        if sig then sig:Destroy() end
     end })
 end
 
