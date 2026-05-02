@@ -371,7 +371,7 @@ local Success, Library = pcall(function()
 
                                                                         Library : Watermark("Wyvren Pro | V 1.0")
                                                                         local Window = Library : Window("Wyvren Pro")
-                                                                        Library : UpdateTheme("Accent", Color3.fromRGB(0, 120, 255))
+                                                                        Library.Theme.Accent = Color3.fromRGB(0, 120, 255)
                                                                         Library : UpdateTheme("Background", Color3.fromRGB(10, 15, 40))
                                                                         Library : UpdateTheme("Sidebar", Color3.fromRGB(15, 25, 70))
                                                                         Library : UpdateTheme("Groupbox", Color3.fromRGB(20, 30, 90))
