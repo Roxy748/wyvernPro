@@ -3,11 +3,6 @@ local correctKey = "Wyvren"
 local keyLink = "https://discord.gg/HHyvyWDy3a"
 
 -- // KEY SYSTEM INTERFACE //
-local KeySystemUI = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local KeyInput = Instance.new("TextBox")
-local VerifyButton = Instance.new("TextButton")
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
@@ -18,46 +13,42 @@ local GetKeyBtn = Instance.new("TextButton")
 ScreenGui.Parent = game:GetService("CoreGui")
 ScreenGui.Name = "KeySystemWyvren"
 
-local KeySystemUI = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local KeyInput = Instance.new("TextBox")
-local VerifyButton = Instance.new("TextButton")
-
-KeySystemUI.Name = "WyvrenKeySystem"
-KeySystemUI.Parent = game.CoreGui
-
-MainFrame.Size = UDim2.new(0, 300, 0, 160)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -80)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-MainFrame.BorderColor3 = Color3.fromRGB(0, 120, 255) --Mavi Kenarlık
-MainFrame.BorderSizePixel = 2
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 40, 120)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+MainFrame.Size = UDim2.new(0, 250, 0, 150)
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Parent = KeySystemUI
 
-Title.Text = "WYVREN | BLUE EDITION"
-Title.TextColor3 = Color3.fromRGB(0, 150, 255)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 18
-Title.BackgroundTransparency = 1
 Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "Wyvren | KEY SYSTEM"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundColor3 = Color3.fromRGB(30, 60, 180)
 
-KeyInput.Size = UDim2.new(0, 220, 0, 35)
-KeyInput.Position = UDim2.new(0.5, -110, 0.5, -10)
-KeyInput.PlaceholderText = "Anahtarı Girin..."
-KeyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-KeyInput.TextColor3 = Color3.white
 KeyInput.Parent = MainFrame
+KeyInput.PlaceholderText = "Enter Key here..."
+KeyInput.Size = UDim2.new(0, 200, 0, 30)
+KeyInput.Position = UDim2.new(0.5, -100, 0.4, 0)
+KeyInput.BackgroundColor3 = Color3.fromRGB(25, 50, 140)
+KeyInput.TextColor3 = Color3.new(1, 1, 1)
 
-VerifyButton.Size = UDim2.new(0, 120, 0, 35)
-VerifyButton.Position = UDim2.new(0.5, -60, 0.8, -5)
-VerifyButton.Text = "Verify"
-VerifyButton.BackgroundColor3 = Color3.fromRGB(0, 100, 255) --Mavi Buton
-VerifyButton.TextColor3 = Color3.white
-VerifyButton.Font = Enum.Font.GothamBold
-VerifyButton.Parent = MainFrame
+VerifyBtn.Parent = MainFrame
+VerifyBtn.Text = "Verify"
+VerifyBtn.Size = UDim2.new(0, 90, 0, 30)
+VerifyBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
+VerifyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+VerifyBtn.TextColor3 = Color3.new(1, 1, 1)
+
+GetKeyBtn.Parent = MainFrame
+GetKeyBtn.Text = "Get Key"
+GetKeyBtn.Size = UDim2.new(0, 90, 0, 30)
+GetKeyBtn.Position = UDim2.new(0.55, 0, 0.7, 0)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(0, 80, 200)
+GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+
 -- // KEY FUNCTIONS //
 local function StartScript()
 ScreenGui:Destroy()
