@@ -684,4 +684,30 @@ local Success, Library = pcall(function()
                                                                                     GetKeyBtn.Text = "Link Copied!"
                                                                                     wait(2)
                                                                                     GetKeyBtn.Text = "Get Key"
-                                                                                    end)
+                                                                                    
+
+task.spawn(function()
+    task.wait(1) -- UI tamamen yüklensin
+
+    while task.wait(0.5) do
+        if Library and Library.Theme then
+            Library.Theme.Accent = Color3.fromRGB(0, 120, 255)
+            Library.Theme.Background = Color3.fromRGB(10, 15, 40)
+            Library.Theme.Sidebar = Color3.fromRGB(15, 25, 70)
+            Library.Theme.Groupbox = Color3.fromRGB(20, 30, 90)
+            Library.Theme.Text = Color3.fromRGB(255, 255, 255)
+            Library.Theme.TextDark = Color3.fromRGB(180, 200, 255)
+            Library.Theme.Outline = Color3.fromRGB(0, 80, 200)
+
+            if Library.UpdateTheme then
+                Library:UpdateTheme("Accent", Library.Theme.Accent)
+                Library:UpdateTheme("Background", Library.Theme.Background)
+                Library:UpdateTheme("Sidebar", Library.Theme.Sidebar)
+                Library:UpdateTheme("Groupbox", Library.Theme.Groupbox)
+                Library:UpdateTheme("Text", Library.Theme.Text)
+                Library:UpdateTheme("TextDark", Library.Theme.TextDark)
+                Library:UpdateTheme("Outline", Library.Theme.Outline)
+            end
+        end
+    end
+end)
